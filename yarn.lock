@@ -1744,14 +1744,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@medusajs/js-sdk@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@medusajs/js-sdk@npm:2.0.0"
+"@medusajs/js-sdk@npm:latest":
+  version: 2.0.1
+  resolution: "@medusajs/js-sdk@npm:2.0.1"
   dependencies:
-    "@medusajs/types": ^2.0.0
+    "@medusajs/types": ^2.0.1
     fetch-event-stream: ^0.1.5
     qs: ^6.12.1
-  checksum: 7359f4373cde12791579affc769a28fc658b73a9718237105cf65cce33c5ff86c3f11939252850ca9d404aae25528f5363b471f2f5b10a63df534e12a2925849
+  checksum: cfd5f162d1524a02c01c55efa02e30c60f4291e3a5f9c1453d8b13272b72a70f907f0e3fbd7fbf286374404416e3d00d320d30b8e2814ef4671baa3887d1dccb
   languageName: node
   linkType: hard
 
@@ -1773,7 +1773,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@medusajs/types@npm:^2.0.0":
+"@medusajs/types@npm:^2.0.1":
   version: 2.0.1
   resolution: "@medusajs/types@npm:2.0.1"
   dependencies:
@@ -7505,7 +7505,7 @@ __metadata:
     "@babel/core": ^7.17.5
     "@headlessui/react": ^1.6.1
     "@hookform/error-message": ^2.0.0
-    "@medusajs/js-sdk": 2.0.0
+    "@medusajs/js-sdk": latest
     "@medusajs/types": 2.0.0
     "@medusajs/ui": 2.0.0
     "@medusajs/ui-preset": 2.0.0
