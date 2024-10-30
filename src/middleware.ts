@@ -60,7 +60,7 @@ async function getCountryCode(
 
 export async function middleware(request: NextRequest) {
   const regionMap = await getRegionMap();
-  const countryCode = await getCountryCode(request, regionMap);
+  const countryCode = (await getCountryCode(request, regionMap)) || DEFAULT_REGION; // Use DEFAULT_REGION as a fallback
 
   const authToken = request.cookies.get("auth-token");
 
