@@ -1,10 +1,14 @@
-"use client"
+"use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useCallback } from "react"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { SortOptions } from "@modules/store/components/refinement-list/sort-products";
+import LocalizedClientLink from "@modules/common/components/localized-client-link";
 
-const RefinementList = () => {
+type RefinementListProps = {
+  sortBy?: SortOptions; // Make sortBy an optional prop
+};
+
+const RefinementList: React.FC<RefinementListProps> = ({ sortBy }) => {
   return (
     <div className="flex small:flex-col gap-12 py-4 mb-8 small:px-0 pl-6 small:min-w-[250px] small:ml-[1.675rem]">
       <div>
@@ -31,7 +35,7 @@ const RefinementList = () => {
         </ul>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default RefinementList
+export default RefinementList;
