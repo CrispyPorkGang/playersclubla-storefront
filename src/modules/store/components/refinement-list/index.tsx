@@ -5,7 +5,8 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 
 type RefinementListProps = {
-  sortBy?: SortOptions; // Make sortBy an optional prop
+  sortBy?: SortOptions;
+  search?: boolean; // Make sortBy an optional prop
 };
 
 const RefinementList: React.FC<RefinementListProps> = ({ sortBy }) => {
