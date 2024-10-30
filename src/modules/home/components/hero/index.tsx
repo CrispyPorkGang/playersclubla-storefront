@@ -22,7 +22,7 @@ const Hero = () => {
           <p className="subtitle">THIS IS VIEW ONLY MENU</p>
         </span>
         <Link href="/store" passHref>
-          <Button as="a" variant="secondary">
+          <Button variant="secondary">
             View Menu
           </Button>
         </Link>
