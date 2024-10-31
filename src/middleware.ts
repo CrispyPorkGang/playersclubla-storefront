@@ -1,88 +1,84 @@
-import { NextRequest, NextResponse } from "next/server"
-import { HttpTypes } from "@medusajs/types"
+import { NextRequest, NextResponse } from "next/server";
+import { HttpTypes } from "@medusajs/types";
+import { notFound } from "next/navigation";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
-const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
+const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
+const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY;
+const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us";
 
+const regionMapCache = {
+  regionMap: new Map<string, HttpTypes.StoreRegion>(),
+  regionMapUpdated: Date.now(),
+};
+
+// Function to get the region map from Medusa
 async function getRegionMap() {
+  const { regionMap, regionMapUpdated } = regionMapCache;
+
+  if (!regionMap.keys().next().value || regionMapUpdated < Date.now() - 3600 * 1000) {
+    const { regions } = await fetch(`${BACKEND_URL}/store/regions`, {
+      headers: { "x-publishable-api-key": PUBLISHABLE_API_KEY! },
+      next: { revalidate: 3600, tags: ["regions"] },
+    }).then((res) => res.json());
+
+    if (!regions?.length) notFound();
+
+    regions.forEach((region: HttpTypes.StoreRegion) => {
+      region.countries?.forEach((c) => {
+        regionMapCache.regionMap.set(c.iso_2 ?? "", region);
+      });
+    });
+
+    regionMapCache.regionMapUpdated = Date.now();
+  }
+
+  return regionMapCache.regionMap;
+}
+
+// Function to determine the country code for the request
+async function getCountryCode(
+  request: NextRequest,
+  regionMap: Map<string, HttpTypes.StoreRegion | number>
+) {
   try {
-    const response = await fetch(`${BACKEND_URL}/store/regions`, {
-      headers: { 
-        "x-publishable-api-key": PUBLISHABLE_API_KEY!,
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        // Add CORS headers
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization"
-      },
-      cache: 'no-store'  // Disable caching
-    })
+    let countryCode;
+    const vercelCountryCode = request.headers.get("x-vercel-ip-country")?.toLowerCase();
+    const urlCountryCode = request.nextUrl.pathname.split("/")[1]?.toLowerCase();
 
-    if (!response.ok) {
-      console.error(`Region fetch failed: ${response.status} ${response.statusText}`)
-      return new Map()
-    }
+    if (urlCountryCode && regionMap.has(urlCountryCode)) countryCode = urlCountryCode;
+    else if (vercelCountryCode && regionMap.has(vercelCountryCode)) countryCode = vercelCountryCode;
+    else if (regionMap.has(DEFAULT_REGION)) countryCode = DEFAULT_REGION;
+    else if (regionMap.keys().next().value) countryCode = regionMap.keys().next().value;
 
-    const data = await response.json()
-    const regionMap = new Map<string, HttpTypes.StoreRegion>()
-
-    if (data?.regions) {
-      data.regions.forEach((region: HttpTypes.StoreRegion) => {
-        region.countries?.forEach((c) => {
-          if (c.iso_2) {
-            regionMap.set(c.iso_2, region)
-          }
-        })
-      })
-    }
-
-    return regionMap
+    return countryCode;
   } catch (error) {
-    console.error('Error in getRegionMap:', error)
-    return new Map()
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error getting country code. Check Medusa Admin and env variable setup.");
+    }
   }
 }
 
 export async function middleware(request: NextRequest) {
-  // Rest of your middleware code remains the same
-  const path = request.nextUrl.pathname
-  
-  if (
-    path.includes('.') || 
-    path.startsWith('/api') || 
-    path.startsWith('/_next') || 
-    path.startsWith('/favicon') ||
-    path.includes('/auth') ||
-    path.includes('/login') ||
-    path.includes('/account')
-  ) {
-    return NextResponse.next()
+  const regionMap = await getRegionMap();
+  const countryCode = (await getCountryCode(request, regionMap)) || DEFAULT_REGION; // Use DEFAULT_REGION as a fallback
+
+  const authToken = request.cookies.get("auth-token");
+
+  // Restrict access to /store for unauthenticated users
+  if (request.nextUrl.pathname.startsWith("/store") && !authToken) {
+    const accountUrl = new URL(`/${countryCode}/account`, request.url);
+    return NextResponse.redirect(accountUrl);
   }
 
-  // Default to US if no region is found
-  const countryCode = DEFAULT_REGION
-
-  // If no country code in path, redirect to default region
-  if (!path.match(/^\/[a-z]{2}\//)) {
-    const url = request.nextUrl.clone()
-    url.pathname = `/${countryCode}${path}`
-    const response = NextResponse.redirect(url)
-    
-    // Preserve cookies
-    request.cookies.getAll().forEach(cookie => {
-      response.cookies.set(cookie.name, cookie.value, cookie.options)
-    })
-    
-    return response
+  // Redirect if no country code in the URL
+  if (!request.nextUrl.pathname.includes(countryCode)) {
+    const redirectUrl = `${request.nextUrl.origin}/${countryCode}${request.nextUrl.pathname}`;
+    return NextResponse.redirect(redirectUrl);
   }
 
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|auth|login|account).*)',
-  ],
-}
+  matcher: ["/((?!api|_next/static|favicon.ico).*)"],
+};
