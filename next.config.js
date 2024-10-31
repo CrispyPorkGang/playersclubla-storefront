@@ -31,18 +31,6 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    appDir: true
-  },
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/us/',
-        permanent: true,
-      },
-    ]
-  }
 }
 
 module.exports = nextConfig

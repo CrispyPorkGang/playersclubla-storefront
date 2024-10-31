@@ -16,23 +16,38 @@ async function getRegionMap() {
   const { regionMap, regionMapUpdated } = regionMapCache;
 
   if (!regionMap.keys().next().value || regionMapUpdated < Date.now() - 3600 * 1000) {
-    const { regions } = await fetch(`${BACKEND_URL}/store/regions`, {
-      headers: { "x-publishable-api-key": PUBLISHABLE_API_KEY! },
-      next: { revalidate: 3600, tags: ["regions"] },
-    }).then((res) => res.json());
-
-    if (!regions?.length) notFound();
-
-    regions.forEach((region: HttpTypes.StoreRegion) => {
-      region.countries?.forEach((c) => {
-        regionMapCache.regionMap.set(c.iso_2 ?? "", region);
+    try {
+      const response = await fetch(`${BACKEND_URL}/store/regions`, {
+        headers: { "x-publishable-api-key": PUBLISHABLE_API_KEY! },
+        next: { revalidate: 3600, tags: ["regions"] },
       });
-    });
 
-    regionMapCache.regionMapUpdated = Date.now();
+      if (!response.ok) {
+        console.error(`Failed to fetch regions: ${response.statusText}`);
+        notFound();
+      }
+
+      const json = await response.json();
+      if (!json || !json.regions?.length) {
+        console.error("No regions data found in response.");
+        notFound();
+      }
+
+      // Clear old data and update cache with new region data
+      regionMap.clear();
+      json.regions.forEach((region: HttpTypes.StoreRegion) => {
+        region.countries?.forEach((c) => {
+          regionMap.set(c.iso_2 ?? "", region);
+        });
+      });
+      regionMapCache.regionMapUpdated = Date.now();
+    } catch (error) {
+      console.error("Error fetching regions:", error);
+      notFound();
+    }
   }
 
-  return regionMapCache.regionMap;
+  return regionMap;
 }
 
 // Function to determine the country code for the request
@@ -41,26 +56,22 @@ async function getCountryCode(
   regionMap: Map<string, HttpTypes.StoreRegion | number>
 ) {
   try {
-    let countryCode;
     const vercelCountryCode = request.headers.get("x-vercel-ip-country")?.toLowerCase();
     const urlCountryCode = request.nextUrl.pathname.split("/")[1]?.toLowerCase();
 
-    if (urlCountryCode && regionMap.has(urlCountryCode)) countryCode = urlCountryCode;
-    else if (vercelCountryCode && regionMap.has(vercelCountryCode)) countryCode = vercelCountryCode;
-    else if (regionMap.has(DEFAULT_REGION)) countryCode = DEFAULT_REGION;
-    else if (regionMap.keys().next().value) countryCode = regionMap.keys().next().value;
-
-    return countryCode;
+    if (urlCountryCode && regionMap.has(urlCountryCode)) return urlCountryCode;
+    if (vercelCountryCode && regionMap.has(vercelCountryCode)) return vercelCountryCode;
+    if (regionMap.has(DEFAULT_REGION)) return DEFAULT_REGION;
+    return regionMap.keys().next().value || DEFAULT_REGION;
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Error getting country code. Check Medusa Admin and env variable setup.");
-    }
+    console.error("Error getting country code:", error);
+    return DEFAULT_REGION;
   }
 }
 
 export async function middleware(request: NextRequest) {
   const regionMap = await getRegionMap();
-  const countryCode = (await getCountryCode(request, regionMap)) || DEFAULT_REGION; // Use DEFAULT_REGION as a fallback
+  const countryCode = (await getCountryCode(request, regionMap)) || DEFAULT_REGION;
 
   const authToken = request.cookies.get("auth-token");
 
@@ -71,7 +82,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect if no country code in the URL
-  if (!request.nextUrl.pathname.includes(countryCode)) {
+  if (!request.nextUrl.pathname.includes(`/${countryCode}`)) {
     const redirectUrl = `${request.nextUrl.origin}/${countryCode}${request.nextUrl.pathname}`;
     return NextResponse.redirect(redirectUrl);
   }
