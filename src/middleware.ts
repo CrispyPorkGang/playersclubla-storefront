@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HttpTypes } from "@medusajs/types";
-import { notFound } from "next/navigation";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY;
@@ -24,30 +23,31 @@ async function getRegionMap() {
 
       if (!response.ok) {
         console.error(`Failed to fetch regions: ${response.statusText}`);
-        notFound();
+        return null;
       }
 
       const json = await response.json();
-      if (!json || !json.regions?.length) {
-        console.error("No regions data found in response.");
-        notFound();
+      if (!json.regions?.length) {
+        console.error("No regions found in response data:", json);
+        return null;
       }
 
-      // Clear old data and update cache with new region data
+      // Clear the old region map and populate with new data
       regionMap.clear();
       json.regions.forEach((region: HttpTypes.StoreRegion) => {
         region.countries?.forEach((c) => {
           regionMap.set(c.iso_2 ?? "", region);
         });
       });
+
       regionMapCache.regionMapUpdated = Date.now();
     } catch (error) {
       console.error("Error fetching regions:", error);
-      notFound();
+      return null;
     }
   }
 
-  return regionMap;
+  return regionMapCache.regionMap;
 }
 
 // Function to determine the country code for the request
@@ -64,15 +64,21 @@ async function getCountryCode(
     if (regionMap.has(DEFAULT_REGION)) return DEFAULT_REGION;
     return regionMap.keys().next().value || DEFAULT_REGION;
   } catch (error) {
-    console.error("Error getting country code:", error);
+    console.error("Error determining country code:", error);
     return DEFAULT_REGION;
   }
 }
 
+// Middleware function
 export async function middleware(request: NextRequest) {
   const regionMap = await getRegionMap();
-  const countryCode = (await getCountryCode(request, regionMap)) || DEFAULT_REGION;
 
+  if (!regionMap) {
+    // Return a 404 response if regions can't be fetched
+    return NextResponse.json({ message: "Regions not found" }, { status: 404 });
+  }
+
+  const countryCode = (await getCountryCode(request, regionMap)) || DEFAULT_REGION;
   const authToken = request.cookies.get("auth-token");
 
   // Restrict access to /store for unauthenticated users
