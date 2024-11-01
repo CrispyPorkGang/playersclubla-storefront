@@ -8,12 +8,16 @@ import { enrichLineItems, retrieveCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { getCustomer } from "@lib/data/customer"
 
+type Props = {
+  params: Promise<{ countryCode: string }>
+}
+
 export const metadata: Metadata = {
   title: "Checkout",
 }
 
 const fetchCart = async () => {
-  const cart = await retrieveCart()
+  const cart = await retrieveCart().catch(() => null)
   if (!cart) {
     return notFound()
   }
@@ -26,9 +30,10 @@ const fetchCart = async () => {
   return cart
 }
 
-export default async function Checkout() {
+export default async function Checkout(props: Props) {
+  const params = await props.params
   const cart = await fetchCart()
-  const customer = await getCustomer()
+  const customer = await getCustomer().catch(() => null)
 
   return (
     <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-x-40 py-12">
