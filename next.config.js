@@ -16,7 +16,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "playersclubla-storefront.vercel.app",
+        hostname: "comforting-toffee-c5db14.netlify.app",
       },
       {
         protocol: "https",

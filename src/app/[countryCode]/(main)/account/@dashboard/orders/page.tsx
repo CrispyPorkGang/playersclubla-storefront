@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Orders() {
-  const orders = await listOrders()
+  const orders = await listOrders().catch(() => null)
 
   if (!orders) {
     notFound()
