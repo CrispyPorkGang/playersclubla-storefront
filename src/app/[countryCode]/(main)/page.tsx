@@ -5,10 +5,6 @@ import Hero from "@modules/home/components/hero"
 import { getCollectionsWithProducts } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
 
-export const metadata: Metadata = {
-  title: "Players Club LA",
-  description: "Power Up With Our Selection Of Cannabis Goods",
-}
 
 type Props = {
   params: Promise<{ countryCode: string }>

@@ -10,10 +10,6 @@ type Props = {
   params: Promise<{ countryCode: string }>
 }
 
-export const metadata: Metadata = {
-  title: "Cart",
-  description: "View your cart",
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { countryCode } = await params

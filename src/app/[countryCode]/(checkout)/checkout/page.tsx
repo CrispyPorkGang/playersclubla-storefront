@@ -13,9 +13,6 @@ type Props = {
   params: Promise<{ countryCode: string }>
 }
 
-export const metadata: Metadata = {
-  title: "Checkout",
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { countryCode } = await params
