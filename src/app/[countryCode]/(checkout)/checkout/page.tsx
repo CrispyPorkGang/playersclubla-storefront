@@ -17,6 +17,20 @@ export const metadata: Metadata = {
   title: "Checkout",
 }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { countryCode } = await params
+  const region = await getRegion(countryCode)
+
+  if (!region) {
+    notFound()
+  }
+
+  return {
+    title: "Checkout",
+    description: "Complete your purchase",
+  }
+}
+
 const fetchCart = async () => {
   const cart = await retrieveCart().catch(() => null)
   if (!cart) {

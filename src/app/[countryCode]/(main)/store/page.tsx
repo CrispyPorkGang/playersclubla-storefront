@@ -4,11 +4,6 @@ import { getRegion } from "@lib/data/regions"
 import StoreTemplate from "@modules/store/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
-export const metadata: Metadata = {
-  title: "Players Club LA",
-  description: "Explore all of our products.",
-}
-
 type Props = {
   params: Promise<{ countryCode: string }>,
   searchParams: Promise<{
@@ -17,8 +12,21 @@ type Props = {
   }>
 }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { countryCode } = await params
+  const region = await getRegion(countryCode)
+
+  if (!region) {
+    notFound()
+  }
+
+  return {
+    title: "Players Club LA",
+    description: "Explore all of our products.",
+  }
+}
+
 export default async function StorePage(props: Props) {
-  // Await both params and searchParams
   const [{ countryCode }, searchParams] = await Promise.all([
     props.params,
     props.searchParams
@@ -29,7 +37,6 @@ export default async function StorePage(props: Props) {
     notFound()
   }
 
-  // Now we can safely use the searchParams
   const { sortBy, page } = searchParams
 
   return (

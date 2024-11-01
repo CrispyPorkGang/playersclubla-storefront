@@ -15,6 +15,20 @@ export const metadata: Metadata = {
   description: "View your cart",
 }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { countryCode } = await params
+  const region = await getRegion(countryCode)
+
+  if (!region) {
+    notFound()
+  }
+
+  return {
+    title: "Cart",
+    description: "View your cart",
+  }
+}
+
 const fetchCart = async () => {
   const cart = await retrieveCart().catch(() => null)
 

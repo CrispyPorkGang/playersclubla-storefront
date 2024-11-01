@@ -14,6 +14,21 @@ type Props = {
   params: Promise<{ countryCode: string }>
 }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { countryCode } = await params
+  const region = await getRegion(countryCode)
+
+  if (!region) {
+    notFound()
+  }
+
+  return {
+    title: "Players Club LA",
+    description: "Power Up With Our Selection Of Cannabis Goods",
+  }
+}
+
+
 export default async function Home({ params }: Props) {
   const { countryCode } = await params
 
