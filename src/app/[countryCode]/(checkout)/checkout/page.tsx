@@ -7,6 +7,7 @@ import CheckoutSummary from "@modules/checkout/templates/checkout-summary"
 import { enrichLineItems, retrieveCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { getCustomer } from "@lib/data/customer"
+import { getRegion } from "@lib/data/regions"
 
 type Props = {
   params: Promise<{ countryCode: string }>
@@ -32,6 +33,12 @@ const fetchCart = async () => {
 
 export default async function Checkout(props: Props) {
   const params = await props.params
+  const region = await getRegion(params.countryCode)
+
+  if (!region) {
+    notFound()
+  }
+
   const cart = await fetchCart()
   const customer = await getCustomer().catch(() => null)
 
