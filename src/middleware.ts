@@ -16,20 +16,35 @@ async function getRegionMap() {
   const { regionMap, regionMapUpdated } = regionMapCache;
 
   if (!regionMap.keys().next().value || regionMapUpdated < Date.now() - 3600 * 1000) {
-    const { regions } = await fetch(`${BACKEND_URL}/store/regions`, {
-      headers: { "x-publishable-api-key": PUBLISHABLE_API_KEY! },
-      next: { revalidate: 3600, tags: ["regions"] },
-    }).then((res) => res.json());
-
-    if (!regions?.length) notFound();
-
-    regions.forEach((region: HttpTypes.StoreRegion) => {
-      region.countries?.forEach((c) => {
-        regionMapCache.regionMap.set(c.iso_2 ?? "", region);
+    try {
+      const response = await fetch(`${BACKEND_URL}/store/regions`, {
+        headers: { 
+          "x-publishable-api-key": PUBLISHABLE_API_KEY!,
+        },
+        next: { revalidate: 3600, tags: ["regions"] },
       });
-    });
 
-    regionMapCache.regionMapUpdated = Date.now();
+      if (!response.ok) {
+        throw new Error(`Failed to fetch regions: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data?.regions?.length) {
+        return new Map<string, HttpTypes.StoreRegion>();
+      }
+
+      data.regions.forEach((region: HttpTypes.StoreRegion) => {
+        region.countries?.forEach((c) => {
+          regionMapCache.regionMap.set(c.iso_2 ?? "", region);
+        });
+      });
+
+      regionMapCache.regionMapUpdated = Date.now();
+    } catch (error) {
+      console.error("Error fetching regions:", error);
+      return new Map<string, HttpTypes.StoreRegion>();
+    }
   }
 
   return regionMapCache.regionMap;
