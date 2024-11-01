@@ -1,0 +1,60 @@
+{
+  "pages": {
+    "/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
+    ],
+    "/not-found": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/not-found.js"
+    ],
+    "/[countryCode]/(main)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[countryCode]/(main)/layout.js"
+    ],
+    "/[countryCode]/(main)/not-found": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[countryCode]/(main)/not-found.js"
+    ],
+    "/[countryCode]/(main)/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[countryCode]/(main)/page.js"
+    ],
+    "/[countryCode]/(main)/account/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[countryCode]/(main)/account/layout.js"
+    ],
+    "/[countryCode]/(main)/account/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[countryCode]/(main)/account/loading.js"
+    ],
+    "/[countryCode]/(main)/account/@dashboard/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[countryCode]/(main)/account/@dashboard/loading.js"
+    ],
+    "/[countryCode]/(main)/account/@dashboard/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[countryCode]/(main)/account/@dashboard/page.js"
+    ],
+    "/[countryCode]/(main)/account/@login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[countryCode]/(main)/account/@login/page.js"
+    ],
+    "/[countryCode]/(main)/store/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[countryCode]/(main)/store/page.js"
+    ]
+  }
+}
