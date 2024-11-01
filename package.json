@@ -13,7 +13,7 @@
   },
   "scripts": {
     "dev": "next dev -p 8000",
-    "build": "next build && cp -r .next dist",
+    "build": "next build && next export",
     "start": "next start -p 8000",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",

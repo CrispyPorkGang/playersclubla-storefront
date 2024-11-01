@@ -8,7 +8,7 @@ checkEnvVariables()
 const nextConfig = {
   reactStrictMode: true,
   distDir: 'dist',  // Add this line
-  output: 'standalone',  // Add this line
+  output: 'export',  // Add this line
   images: {
     remotePatterns: [
       {
