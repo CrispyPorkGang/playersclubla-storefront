@@ -75,17 +75,27 @@ export async function middleware(request: NextRequest) {
     const regionMap = await getRegionMap() || new Map<string, HttpTypes.StoreRegion>();
     const countryCode = await getCountryCode(request, regionMap);
 
+    // Ensure countryCode is valid before using it in URLs
+    if (!countryCode) {
+      return NextResponse.redirect(new URL(`/${DEFAULT_REGION}`, request.url));
+    }
+
     const authToken = request.cookies.get("auth-token");
 
     // Restrict access to /store for unauthenticated users
     if (request.nextUrl.pathname.startsWith("/store") && !authToken) {
-      const accountUrl = new URL(`/${countryCode}/account`, request.url);
+      const accountUrl = new URL(`/${countryCode}/account`, new URL(request.url).origin);
       return NextResponse.redirect(accountUrl);
     }
 
     // Redirect if no country code in the URL
-    if (!request.nextUrl.pathname.includes(countryCode!)) {
-      const redirectUrl = new URL(`/${countryCode}${request.nextUrl.pathname}`, request.url);
+    if (!request.nextUrl.pathname.includes(`/${countryCode}/`)) {
+      const redirectUrl = new URL(
+        request.nextUrl.pathname.startsWith('/') 
+          ? `/${countryCode}${request.nextUrl.pathname}`
+          : `/${countryCode}/${request.nextUrl.pathname}`,
+        new URL(request.url).origin
+      );
       return NextResponse.redirect(redirectUrl);
     }
 
@@ -93,7 +103,7 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     console.error("Middleware error:", error);
     // Fall back to default region on error
-    return NextResponse.redirect(new URL(`/${DEFAULT_REGION}`, request.url));
+    return NextResponse.redirect(new URL(`/${DEFAULT_REGION}`, new URL(request.url).origin));
   }
 }
 
