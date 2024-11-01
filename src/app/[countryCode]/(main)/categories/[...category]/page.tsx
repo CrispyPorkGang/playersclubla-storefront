@@ -16,8 +16,18 @@ type Props = {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { category } = await params
+  const { category, countryCode } = await params
+  
+  const region = await getRegion(countryCode)
+  if (!region) {
+    notFound()
+  }
+
   const { product_categories } = await getCategoryByHandle(category)
+
+  if (!product_categories) {
+    notFound()
+  }
 
   const title = product_categories
     .map((category: StoreProductCategory) => category.name)
@@ -30,7 +40,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
   }
 }
-
 export default async function CategoryPage(props: Props) {
   const searchParams = await props.searchParams;
   const { countryCode, category } = await props.params;
