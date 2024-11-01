@@ -17,8 +17,7 @@
     "start": "next start -p 8000",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
-    "test-e2e": "playwright test e2e",
-    "fleek-build": "yarn install && yarn build"
+    "test-e2e": "playwright test e2e"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",
