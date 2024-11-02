@@ -70,23 +70,14 @@ export async function middleware(request: NextRequest) {
     const pathSegments = pathname.split('/').filter(Boolean);
     const hasValidCountryCode = pathSegments[0] === countryCode;
 
-    // Handle store access
-    if (pathname.startsWith("/store")) {
-      if (!authToken) {
-        // Redirect to login if not authenticated
-        const accountUrl = new URL(`/${countryCode}/account`, request.url);
-        return NextResponse.redirect(accountUrl);
-      } else {
-        // If authenticated and on /store, redirect to /{countryCode}/store
-        if (!hasValidCountryCode) {
-          const storeUrl = new URL(`/${countryCode}/store`, request.url);
-          return NextResponse.redirect(storeUrl);
-        }
-      }
+    // Restrict access to /store for unauthenticated users
+    if (pathname.startsWith("/store") && !authToken) {
+      const accountUrl = new URL(`/${countryCode}/account`, request.url);
+      return NextResponse.redirect(accountUrl);
     }
 
-    // General country code redirect
-    if (!hasValidCountryCode && !pathname.startsWith('/_next') && !pathname.startsWith('/api')) {
+    // Only redirect if the path doesn't already start with the country code
+    if (!hasValidCountryCode) {
       const newPath = `/${countryCode}${pathname}`;
       const redirectUrl = new URL(newPath, request.url);
       return NextResponse.redirect(redirectUrl);
