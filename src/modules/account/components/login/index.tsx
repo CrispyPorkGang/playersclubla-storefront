@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@lib/firebase/firebaseconfig"
 
@@ -17,6 +17,7 @@ const Login = ({ setCurrentView }: Props) => {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const { countryCode } = useParams()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,14 +27,11 @@ const Login = ({ setCurrentView }: Props) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       console.log("User signed in:", userCredential.user)
       
-      // Get the ID token
       const idToken = await userCredential.user.getIdToken()
-      
-      // Set the auth token as a cookie on the client side
       document.cookie = `auth-token=${idToken}; path=/; secure; samesite=strict`
 
-      // Redirect after successful login
-      router.push("/store")
+      // Use countryCode in the redirect path
+      router.replace(`/${countryCode}/store`)
     } catch (error: any) {
       setError("Failed to log in. Please check your email and password.")
       console.error("Login error:", error)
